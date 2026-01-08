@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres-pods
+  serviceName: postgres-svc
+  replicas: 3 
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: postgres-pods # has to match .spec.selector.matchLabels
+        
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: postgres-pod
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+          name: postgres
+
+        env:
+        - name: POSTGRES_DB
+          value: "coordinates_db"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "82658265"
+
+        volumeMounts:
+        - name: postgres-pvc
+          mountPath: /var/lib/postgresql/data
+
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-pvc
+      labels:
+        app: postgres
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
